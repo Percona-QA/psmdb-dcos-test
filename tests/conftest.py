@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import pytest
-from config.parse_config import DCOSTestGeneral
+from general.general import DCOSTestGeneral
 from pymongo import MongoClient
 
-config = DCOSTestGeneral()
+dcos = DCOSTestGeneral()
 
 @pytest.fixture
 def check_replicaset_health():
-    c = MongoClient(config.MONGO['node1_host'], int(config.MONGO['node1_port']))
+    c = MongoClient('mongodb://{}:{}@{}/?replicaSet={}&authSource=admin'.format(dcos.MONGO['userapp'], dcos.MONGO['userapppwd'], dcos.MONGO['address'], dcos.MONGO['rs_name']))
     return True

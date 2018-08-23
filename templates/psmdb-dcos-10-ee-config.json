@@ -1,0 +1,126 @@
+{
+  "service": {
+    "name": "percona-mongo",
+    "sleep": 1000,
+    "user": "root",
+    "virtual_networks": false,
+    "log_level": "INFO",
+    "mesos_api_version": "V1"
+  },
+  "mongodb": {
+    "cpus": 1,
+    "mem": 1024,
+    "disk": 1000,
+    "diskType": "ROOT",
+    "count": 3,
+    "replicaSetName": "rs",
+    "port": 27017,
+    "storageEngine": "wiredTiger",
+    "placement": {
+      "constraint": "[[\"hostname\", \"UNIQUE\"]]"
+    }
+  },
+  "mongodb-credentials": {
+    "backupUser": "backup",
+    "userAdminUser": "useradmin",
+    "clusterAdminUser": "clusteradmin",
+    "clusterMonitorUser": "clustermonitor"
+  },
+  "mongodb-advanced": {
+    "container": {
+      "openFileLimit": 64000,
+      "processLimit": 64000
+    },
+    "security": {
+      "redactClientLogData": false
+    },
+    "storage": {
+      "indexBuildRetry": true,
+      "directoryPerDB": false,
+      "syncPeriodSecs": 60
+    },
+    "setParameter": {
+      "failIndexKeyTooLong": true,
+      "maxIndexBuildMemoryUsageMB": 500,
+      "logUserIds": 0,
+      "ttlMonitorEnabled": true,
+      "ttlMonitorSleepSecs": 60,
+      "wiredTigerConcurrentReadTransactions": 128,
+      "wiredTigerConcurrentWriteTransactions": 128
+    },
+    "net": {
+      "maxIncomingConnections": 51200,
+      "transportLayer": "asio",
+      "serviceExecutor": "synchronous"
+    },
+    "operationProfiling": {
+      "mode": "slowOp",
+      "slowOpThresholdMs": 100,
+      "rateLimit": 1
+    },
+    "replication": {
+      "secondaryIndexPrefetch": "all"
+    },
+    "auditLog": {
+      "enabled": false,
+      "filter": "{}",
+      "auditAuthorizationSuccess": false
+    },
+    "systemLog": {
+      "verbosity": 0,
+      "traceAllExceptions": false,
+      "timestampFormat": "iso8601-local"
+    }
+  },
+  "mongodb-ssl": {
+    "enabled": false,
+    "mode": "preferSSL",
+    "allowConnectionsWithoutCertificates": false,
+    "allowInvalidCertificates": false,
+    "allowInvalidHostnames": false
+  },
+  "backup-restore": {
+    "cpus": 2,
+    "mem": 1024,
+    "s3": {
+      "region": "us-east-1"
+    },
+    "restore": {
+      "restoreAfterInit": false,
+      "gzip": true,
+      "dropCollections": true,
+      "oplogReplay": true,
+      "numParallelCollections": 4
+    },
+    "backup": {
+      "verbose": false
+    },
+    "hiddenSecondary": {
+      "enabled": false,
+      "cpus": 1,
+      "mem": 1024
+    }
+  },
+  "dcos-metrics": {
+    "enabled": false,
+    "intervalSecs": 10
+  },
+  "admin": {
+    "cpus": 0.2,
+    "mem": 64,
+    "init": {
+      "initiateDelay": "15s",
+      "maxConnectTries": 30,
+      "maxInitReplsetTries": 60,
+      "maxAddUsersTries": 60,
+      "retrySleep": "3s"
+    },
+    "watchdog": {
+      "apiPoll": "10s",
+      "apiTimeout": "5s",
+      "replsetPoll": "5s",
+      "replsetTimeout": "3s",
+      "metricsPort": 0
+    }
+  }
+}

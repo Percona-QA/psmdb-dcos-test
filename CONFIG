@@ -5,4 +5,4 @@ DCOS_PSMDB=0.3.1-3.6.5
 MONGO_BASE_DIR=/home/plavi/test/psmdb/bin/percona-server-mongodb-3.6.5-1.3
 YCSB_BASE_DIR=/home/plavi/test/psmdb/ycsb-mongodb-binding-0.15.0
 CLUSTER_NAME=tomislav-dcos-11-ee
-CLUSTER_URL=https://tomislav-elasticl-19avdgm5enhoa-1251519055.eu-central-1.elb.amazonaws.com
+CLUSTER_URL=https://tomislav-elasticl-1drqt6f8z6ep8-2132282551.eu-west-1.elb.amazonaws.com

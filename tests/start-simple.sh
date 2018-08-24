@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
-sudo dcos package install percona-mongo --options=../templates/psmdb-dcos-11-config.json
 
-sudo dcos percona-mongo endpoints mongo-port
+source ../CONFIG
 
-sudo dcos percona-mongo pod list
+if [ "${DCOS_TEST_VER}" = "1.11" ]; then
+  TEMPLATE="../templates/psmdb-dcos-11-config.json"
+else
+  TEMPLATE="../templates/psmdb-dcos-10-config.json"
+fi
+dcos package install percona-mongo --options=${TEMPLATE} --yes
+
+sleep 30
+dcos percona-mongo endpoints mongo-port
+
+dcos percona-mongo pod list

@@ -1,8 +1,16 @@
+CLUSTER_URL=https://tomislav-elasticl-14detq8j3cv2q-814289512.eu-west-1.elb.amazonaws.com
+CLUSTER_NAME=tomislav-dcos-11-ee
 DCOS_TEST_VER=1.11
 DCOS_11_VER=1.11.4
 DCOS_10_VER=1.10.8
 DCOS_PSMDB=0.3.1-3.6.5
 MONGO_BASE_DIR=/home/tomislav.plavcic/percona-server-mongodb-3.6.6-1.4
 YCSB_BASE_DIR=/home/tomislav.plavcic/ycsb-mongodb-binding-0.15.0
-CLUSTER_NAME=tomislav-dcos-11-ee
-CLUSTER_URL=https://tomislav-elasticl-1drqt6f8z6ep8-2132282551.eu-west-1.elb.amazonaws.com
+
+# Below is mostly static stuff
+MONGO_BIN=${MONGO_BASE_DIR}/bin/mongo
+YCSB_BIN=${YCSB_BASE_DIR}/bin/ycsb
+DCOS_CLI_BIN="sudo dcos"
+RS_NAME="rs"
+PACKAGE_NAME="percona-mongo"
+SERVICE_NAME="percona-mongo"

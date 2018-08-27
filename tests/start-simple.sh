@@ -7,9 +7,9 @@ if [ "${DCOS_TEST_VER}" = "1.11" ]; then
 else
   TEMPLATE="../templates/psmdb-dcos-10-config.json"
 fi
-dcos package install percona-mongo --options=${TEMPLATE} --yes
+${DCOS_CLI_BIN} package install percona-mongo --options=${TEMPLATE} --yes
 
 sleep 30
-dcos percona-mongo endpoints mongo-port
+${DCOS_CLI_BIN} percona-mongo endpoints mongo-port
 
-dcos percona-mongo pod list
+${DCOS_CLI_BIN} percona-mongo pod list

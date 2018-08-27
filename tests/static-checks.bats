@@ -3,10 +3,10 @@
 load common-func
 
 @test "create new service" {
-#  run ${DCOS_CLI_BIN} package install ${PACKAGE_NAME} --options=${TEMPLATE} --yes
-#  [ "$status" -eq 0 ]
+  run ${DCOS_CLI_BIN} package install ${PACKAGE_NAME} --options=${TEMPLATE} --yes
+  [ "$status" -eq 0 ]
 
-#  sleep 30
+  sleep 30
   [ "$(get_nr_nodes ${SERVICE_NAME})" -eq 3 ]
   [ "$(get_dcos_service_active_status ${SERVICE_NAME})" = "True" ]
   [ "$(get_dcos_service_nr_tasks ${SERVICE_NAME})" -eq 4 ]

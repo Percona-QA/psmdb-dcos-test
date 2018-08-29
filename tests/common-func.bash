@@ -18,12 +18,27 @@ get_node_address() {
   ${DCOS_CLI_BIN} ${FUN_DCOS_SERVICE_NAME} endpoints mongo-port|jq -r .address[${FUN_NODE_NUMBER}]
 }
 
+get_node_address_full() {
+  local FUN_DCOS_SERVICE_NAME="$1"
+  local FUN_NODE_NUMBER="$2"
+  local FUN_NODE_ADDRESS=$(${DCOS_CLI_BIN} ${FUN_DCOS_SERVICE_NAME} endpoints mongo-port|jq -r .address[${FUN_NODE_NUMBER}])
+  echo "mongodb://${FUN_NODE_ADDRESS}/?authSource=admin"
+}
+
 get_rs_address() {
   local FUN_DCOS_SERVICE_NAME="$1"
   local FUN_NODE1_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "0")
   local FUN_NODE2_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "1")
   local FUN_NODE3_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "2")
-  echo "mongodb://${FUN_NODE1_ADDRESS},${FUN_NODE2_ADDRESS},${FUN_NODE3_ADDRESS}/?replicaSet=${RS_NAME}"
+  echo "mongodb://${FUN_NODE1_ADDRESS},${FUN_NODE2_ADDRESS},${FUN_NODE3_ADDRESS}/?replicaSet=${RS_NAME}&authSource=admin"
+}
+
+get_rs_address_test() {
+  local FUN_DCOS_SERVICE_NAME="$1"
+  local FUN_NODE1_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "0")
+  local FUN_NODE2_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "1")
+  local FUN_NODE3_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "2")
+  echo "mongodb://${MONGODB_TEST_USER}:${MONGODB_TEST_PASS}@${FUN_NODE1_ADDRESS},${FUN_NODE2_ADDRESS},${FUN_NODE3_ADDRESS}/${MONGODB_TEST_DB}?replicaSet=${RS_NAME}&authSource=admin"
 }
 
 get_dcos_service_id() {

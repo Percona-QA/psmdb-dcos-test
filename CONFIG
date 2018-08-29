@@ -1,4 +1,4 @@
-CLUSTER_URL=https://tomislav-elasticl-14detq8j3cv2q-814289512.eu-west-1.elb.amazonaws.com
+CLUSTER_URL=https://tomislav-elasticl-crvv3oups1y7-1888977039.eu-west-1.elb.amazonaws.com
 CLUSTER_NAME=tomislav-dcos-11-ee
 DCOS_TEST_VER=1.11
 DCOS_11_VER=1.11.4
@@ -14,3 +14,6 @@ DCOS_CLI_BIN="sudo dcos"
 RS_NAME="rs"
 PACKAGE_NAME="percona-mongo"
 SERVICE_NAME="percona-mongo"
+MONGODB_TEST_USER="testUser"
+MONGODB_TEST_PASS="test123456"
+MONGODB_TEST_DB="test"

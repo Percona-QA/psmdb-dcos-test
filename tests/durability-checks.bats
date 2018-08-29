@@ -6,22 +6,44 @@ load common-func
   run ${DCOS_CLI_BIN} package install ${PACKAGE_NAME} --options=${TEMPLATE} --yes
   [ "$status" -eq 0 ]
 
-  sleep 30
+  sleep 90
   [ "$(get_nr_nodes ${SERVICE_NAME})" -eq 3 ]
   [ "$(get_dcos_service_active_status ${SERVICE_NAME})" = "True" ]
   [ "$(get_dcos_service_nr_tasks ${SERVICE_NAME})" -eq 4 ]
 }
 
-@test "check connection to mongo" {
-  run bash -c "${MONGO_BIN} $(get_rs_address ${SERVICE_NAME}) --username clusteradmin --password test123456 --authenticationDatabase admin --eval 'rs.status()'"
+@test "setup and check connection to mongo" {
+  run bash -c "${MONGO_BIN} '$(get_rs_address ${SERVICE_NAME})' --username useradmin --password test123456 --eval \"db.getSiblingDB('admin').createUser({ user: '${MONGODB_TEST_USER}', pwd: '${MONGODB_TEST_PASS}', roles: [ 'readWrite', 'dbAdmin', 'root' ] })\""
+  [ "$status" -eq 0 ]
+
+  run bash -c "${MONGO_BIN} '$(get_rs_address ${SERVICE_NAME})' --username clusteradmin --password test123456 --eval 'rs.status()'"
+  [ "$status" -eq 0 ]
+
+  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${SERVICE_NAME})' --eval 'db.getCollectionInfos()'"
   [ "$status" -eq 0 ]
 }
 
-@test "load data with ycsb" {
-  #TODO: Load at least 2Gb of data into a table with ycsb
-  #TODO: Save dbHash for this table on every node
-  #Something like:
-  #./bin/ycsb load mongodb -s -P workloads/workloada -p recordcount=2000000 -threads 4 -p mongodb.url="mongodb://user:pwd@localhost:27017/ycsb_test" -p mongodb.auth="true"
+@test "load some data" {
+  RECORD_COUNT="10000"
+
+  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${SERVICE_NAME})' --eval 'db.usertable.drop()'"
+  [ "$status" -eq 0 ]
+
+  run bash -c "${YCSB_BIN} load mongodb -s -P ${YCSB_BASE_DIR}/workloads/workloada -p recordcount=${RECORD_COUNT} -threads 64 -p mongodb.url=\"$(get_rs_address_test ${SERVICE_NAME})\" -p mongodb.auth=\"true\""
+  [ "$status" -eq 0 ]
+
+  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${SERVICE_NAME})' --eval 'db.usertable.count()' | tail -n1"
+  [ "$output" = "${RECORD_COUNT}" ]
+
+  rm -f testdb-md5.cache
+  run bash -c "${MONGO_BIN} '$(get_node_address_full ${SERVICE_NAME} 0)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1 > testdb-md5.cache"
+  TESTDB_MD5=$(cat testdb-md5.cache)
+
+  run bash -c "${MONGO_BIN} '$(get_node_address_full ${SERVICE_NAME} 1)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1"
+  [ "$output" = "${TESTDB_MD5}" ]
+
+  run bash -c "${MONGO_BIN} '$(get_node_address_full ${SERVICE_NAME} 2)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1"
+  [ "$output" = "${TESTDB_MD5}" ]
 }
 
 @test "check updating configuration" {

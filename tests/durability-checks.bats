@@ -7,9 +7,9 @@ load common-func
   [ "$status" -eq 0 ]
 
   sleep 90
-  [ "$(get_nr_nodes ${SERVICE_NAME})" -eq 3 ]
+  [ "$(get_nr_nodes ${SERVICE_NAME})" -eq ${RS_SIZE} ]
   [ "$(get_dcos_service_active_status ${SERVICE_NAME})" = "True" ]
-  [ "$(get_dcos_service_nr_tasks ${SERVICE_NAME})" -eq 4 ]
+  [ "$(get_dcos_service_nr_tasks ${SERVICE_NAME})" -eq $((${RS_SIZE} + 1)) ]
 }
 
 @test "setup and check connection to mongo" {
@@ -23,27 +23,121 @@ load common-func
   [ "$status" -eq 0 ]
 }
 
-@test "load some data" {
-  RECORD_COUNT="10000"
+@test "load some data in usertable1" {
+  load_data ${SERVICE_NAME} usertable1
+  load_check_hash ${SERVICE_NAME}
+}
 
-  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${SERVICE_NAME})' --eval 'db.usertable.drop()'"
+@test "check master pod redeploy" {
+  local MASTER_POD=$(get_master_pod ${SERVICE_NAME})
+  local MASTER_POD_AGENT=$(get_pod_agent ${SERVICE_NAME} ${MASTER_POD})
+  run bash -c "${DCOS_CLI_BIN} ${SERVICE_NAME} pod replace ${MASTER_POD}"
   [ "$status" -eq 0 ]
+  
+  sleep 45
+  # new mongo master should be elected
+  local MASTER_POD_NEW=$(get_master_pod ${SERVICE_NAME})
+  [ "${MASTER_POD}" != "${MASTER_POD_NEW}" ]
 
-  run bash -c "${YCSB_BIN} load mongodb -s -P ${YCSB_BASE_DIR}/workloads/workloada -p recordcount=${RECORD_COUNT} -threads 64 -p mongodb.url=\"$(get_rs_address_test ${SERVICE_NAME})\" -p mongodb.auth=\"true\""
+  # new pod should be created on the new agent
+  local MASTER_POD_AGENT_NEW=$(get_pod_agent ${SERVICE_NAME} ${MASTER_POD})
+  [ "${MASTER_POD_AGENT}" != "${MASTER_POD_AGENT_NEW}" ]
+
+  load_check_hash ${SERVICE_NAME}
+}
+
+@test "load some data in usertable2" {
+  load_data ${SERVICE_NAME} usertable2
+  load_check_hash ${SERVICE_NAME}
+}
+
+@test "check slave pod redeploy" {
+  local SLAVE_POD=$(get_slave_pod ${SERVICE_NAME})
+  local SLAVE_POD_AGENT=$(get_pod_agent ${SERVICE_NAME} ${SLAVE_POD})
+  run bash -c "${DCOS_CLI_BIN} ${SERVICE_NAME} pod replace ${SLAVE_POD}"
   [ "$status" -eq 0 ]
+  
+  sleep 45
+  # new pod should be created on the NEW agent
+  local SLAVE_POD_AGENT_NEW=$(get_pod_agent ${SERVICE_NAME} ${SLAVE_POD})
+  [ "${SLAVE_POD_AGENT}" != "${SLAVE_POD_AGENT_NEW}" ]
 
-  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${SERVICE_NAME})' --eval 'db.usertable.count()' | tail -n1"
-  [ "$output" = "${RECORD_COUNT}" ]
+  load_check_hash ${SERVICE_NAME}
+}
 
-  rm -f testdb-md5.cache
-  run bash -c "${MONGO_BIN} '$(get_node_address_full ${SERVICE_NAME} 0)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1 > testdb-md5.cache"
-  TESTDB_MD5=$(cat testdb-md5.cache)
+@test "load some data in usertable3" {
+  load_data ${SERVICE_NAME} usertable3
+  load_check_hash ${SERVICE_NAME}
+}
 
-  run bash -c "${MONGO_BIN} '$(get_node_address_full ${SERVICE_NAME} 1)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1"
-  [ "$output" = "${TESTDB_MD5}" ]
+@test "check master pod restart" {
+  local MASTER_POD=$(get_master_pod ${SERVICE_NAME})
+  local MASTER_POD_AGENT=$(get_pod_agent ${SERVICE_NAME} ${MASTER_POD})
+  run bash -c "${DCOS_CLI_BIN} ${SERVICE_NAME} pod restart ${MASTER_POD}"
+  [ "$status" -eq 0 ]
+  
+  sleep 45
+  # new mongo master should be elected
+  local MASTER_POD_NEW=$(get_master_pod ${SERVICE_NAME})
+  [ "${MASTER_POD}" != "${MASTER_POD_NEW}" ]
 
-  run bash -c "${MONGO_BIN} '$(get_node_address_full ${SERVICE_NAME} 2)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1"
-  [ "$output" = "${TESTDB_MD5}" ]
+  # new pod should be created on the SAME agent
+  local MASTER_POD_AGENT_NEW=$(get_pod_agent ${SERVICE_NAME} ${MASTER_POD})
+  [ "${MASTER_POD_AGENT}" = "${MASTER_POD_AGENT_NEW}" ]
+
+  load_check_hash ${SERVICE_NAME}
+}
+
+@test "load some data in usertable4" {
+  load_data ${SERVICE_NAME} usertable4
+  load_check_hash ${SERVICE_NAME}
+}
+
+@test "check slave pod restart" {
+  local SLAVE_POD=$(get_slave_pod ${SERVICE_NAME})
+  local SLAVE_POD_AGENT=$(get_pod_agent ${SERVICE_NAME} ${SLAVE_POD})
+  run bash -c "${DCOS_CLI_BIN} ${SERVICE_NAME} pod restart ${SLAVE_POD}"
+  [ "$status" -eq 0 ]
+  
+  sleep 45
+  # new pod should be created on the SAME agent
+  local SLAVE_POD_AGENT_NEW=$(get_pod_agent ${SERVICE_NAME} ${SLAVE_POD})
+  [ "${SLAVE_POD_AGENT}" = "${SLAVE_POD_AGENT_NEW}" ]
+
+  load_check_hash ${SERVICE_NAME}
+}
+
+@test "load some data in usertable5" {
+  load_data ${SERVICE_NAME} usertable5
+  load_check_hash ${SERVICE_NAME}
+}
+
+@test "check issuing kill -9 on master" {
+  # sudo dcos task exec --interactive --tty mongo-rs-1-mongod__ac3d4e16-2e33-4c9d-b559-3cfdd4142de3 /bin/bash
+  #TODO: Kill -9 mongod process on master pod
+  #TODO: Check that the node was recreated
+  #TODO: Check that the data loaded in previous test is the same in all nodes
+}
+
+@test "do some ycsb load" {
+  #TODO: Run some more ycsb load to see that writes are working
+  #TODO: Save dbHash for this table on every node
+  #Something like:
+  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:${MONGODB_PORT}/ycsb_test" -p mongodb.auth="false"
+}
+
+@test "check issuing kill -9 on slave" {
+  # sudo dcos task exec --interactive --tty mongo-rs-1-mongod__ac3d4e16-2e33-4c9d-b559-3cfdd4142de3 /bin/bash
+  #TODO: Kill -9 mongod process on slave pod
+  #TODO: Check that the node was recreated
+  #TODO: Check that the data loaded in previous test is the same in all nodes
+}
+
+@test "do some ycsb load" {
+  #TODO: Run some more ycsb load to see that writes are working
+  #TODO: Save dbHash for this table on every node
+  #Something like:
+  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:${MONGODB_PORT}/ycsb_test" -p mongodb.auth="false"
 }
 
 @test "check updating configuration" {
@@ -56,85 +150,7 @@ load common-func
   #TODO: Run some more ycsb load to see that writes are working
   #TODO: Save dbHash for this table on every node
   #Something like:
-  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:27017/ycsb_test" -p mongodb.auth="false"
-}
-
-@test "check master pod redeploy" {
-  #dcos percona-mongo pod replace mongo-rs-1
-  #TODO: Redeploy master node, check that the new master was elected
-  #TODO: Check that the data loaded in previous test is the same in all nodes
-}
-
-@test "do some ycsb load" {
-  #TODO: Run some more ycsb load to see that writes are working
-  #TODO: Save dbHash for this table on every node
-  #Something like:
-  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:27017/ycsb_test" -p mongodb.auth="false"
-}
-
-@test "check slave pod redeploy" {
-  #dcos percona-mongo pod replace mongo-rs-1
-  #TODO: Redeploy slave node, check that it was redeployed and not the same as before the test
-  #TODO: Check that the data loaded in previous test is the same in all nodes
-}
-
-@test "do some ycsb load" {
-  #TODO: Run some more ycsb load to see that writes are working
-  #TODO: Save dbHash for this table on every node
-  #Something like:
-  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:27017/ycsb_test" -p mongodb.auth="false"
-}
-
-@test "check master pod restart" {
-  #dcos percona-mongo pod restart mongo-rs-1
-  #TODO: Restart master node, check that it was restarted and not the same as before the test
-  #TODO: Check that the data loaded in previous test is the same in all nodes
-}
-
-@test "do some ycsb load" {
-  #TODO: Run some more ycsb load to see that writes are working
-  #TODO: Save dbHash for this table on every node
-  #Something like:
-  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:27017/ycsb_test" -p mongodb.auth="false"
-}
-
-@test "check slave pod restart" {
-  #dcos percona-mongo pod restart mongo-rs-1
-  #TODO: Restart slave node, check that it was restarted and not the same as before the test
-  #TODO: Check that the data loaded in previous test is the same in all nodes
-}
-
-@test "do some ycsb load" {
-  #TODO: Run some more ycsb load to see that writes are working
-  #TODO: Save dbHash for this table on every node
-  #Something like:
-  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:27017/ycsb_test" -p mongodb.auth="false"
-}
-
-@test "check issuing kill -9 on master" {
-  #TODO: Kill -9 mongod process on master pod
-  #TODO: Check that the node was recreated
-  #TODO: Check that the data loaded in previous test is the same in all nodes
-}
-
-@test "do some ycsb load" {
-  #TODO: Run some more ycsb load to see that writes are working
-  #TODO: Save dbHash for this table on every node
-  #Something like:
-  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:27017/ycsb_test" -p mongodb.auth="false"
-}
-
-@test "check issuing kill -9 on slave" {
-  #TODO: Kill -9 mongod process on slave pod
-  #TODO: Check that the node was recreated
-  #TODO: Check that the data loaded in previous test is the same in all nodes
-}
-
-@test "do some ycsb load" {
-  #TODO: Run some more ycsb load to see that writes are working
-  #TODO: Save dbHash for this table on every node
-  #Something like:
-  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:27017/ycsb_test" -p mongodb.auth="false"
+  #./bin/ycsb.sh run mongodb -s -P workloads/workloadb -p recordcount=100000 -p operationcount=10000000 -threads 4 -p mongodb.url="mongodb://localhost:${MONGODB_PORT}/ycsb_test" -p mongodb.auth="false"
 }
 
 # Disabled because of https://github.com/mesosphere/dcos-mongo/issues/249

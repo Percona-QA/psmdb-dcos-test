@@ -7,9 +7,9 @@ load common-func
   [ "$status" -eq 0 ]
 
   sleep 90
-  [ "$(get_nr_nodes ${SERVICE_NAME})" -eq 3 ]
+  [ "$(get_nr_nodes ${SERVICE_NAME})" -eq ${RS_SIZE} ]
   [ "$(get_dcos_service_active_status ${SERVICE_NAME})" = "True" ]
-  [ "$(get_dcos_service_nr_tasks ${SERVICE_NAME})" -eq 4 ]
+  [ "$(get_dcos_service_nr_tasks ${SERVICE_NAME})" -eq $((${RS_SIZE} + 1)) ]
 }
 
 @test "setup and check connection to mongo" {

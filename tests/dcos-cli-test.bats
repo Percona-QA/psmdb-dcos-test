@@ -35,7 +35,6 @@ load common-func
 #- user add/remove/update
 
 @test "test adding a user" { 
-  skip "Issue: https://github.com/mesosphere/dcos-mongo/issues/257"
   run ${DCOS_CLI_BIN} ${SERVICE_NAME} user add admin ../templates/test-user.json
   [ "$status" -eq 0 ]
 }

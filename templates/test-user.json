@@ -1,5 +1,9 @@
 {
-  user: "testUser",
-  pwd: "test123456",
-  roles: [ "readWrite", "dbAdmin", "root" ]
+  "user": "testUser",
+  "pwd": "test123456",
+  "roles": [
+    { "role": "readWrite", "db": "admin" },
+    { "role": "dbAdmin", "db": "admin" },
+    { "role": "root", "db": "admin" }
+  ]
 }

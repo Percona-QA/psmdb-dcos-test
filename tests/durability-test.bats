@@ -14,8 +14,11 @@ load common-func
 }
 
 @test "setup and check connection to mongo" {
-  run bash -c "${MONGO_BIN} '$(get_rs_address ${SERVICE_NAME} ${RS_SIZE})' --username useradmin --password test123456 --eval \"db.getSiblingDB('admin').createUser({ user: '${MONGODB_TEST_USER}', pwd: '${MONGODB_TEST_PASS}', roles: [ 'readWrite', 'dbAdmin', 'root' ] })\""
+  run ${DCOS_CLI_BIN} ${SERVICE_NAME} user add admin ../templates/test-user.json
   [ "$status" -eq 0 ]
+
+#  run bash -c "${MONGO_BIN} '$(get_rs_address ${SERVICE_NAME} ${RS_SIZE})' --username useradmin --password test123456 --eval \"db.getSiblingDB('admin').createUser({ user: '${MONGODB_TEST_USER}', pwd: '${MONGODB_TEST_PASS}', roles: [ 'readWrite', 'dbAdmin', 'root' ] })\""
+#  [ "$status" -eq 0 ]
 
   run bash -c "${MONGO_BIN} '$(get_rs_address ${SERVICE_NAME} ${RS_SIZE})' --username clusteradmin --password test123456 --eval 'rs.status()'"
   [ "$status" -eq 0 ]

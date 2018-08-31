@@ -1,7 +1,6 @@
-# psmdb-dcos-test
-PSMDB Mesosphere DCOS test repo
+# PSMDB Mesosphere DCOS test repo
 
-How to use:
+**How to use:**
 1. Create DCOS AWS stack via cli or web interface
 2. Update CONFIG file with all needed info for the cluster that is currently under test
 3. Install dcos cli command via `utils/install-dcos-cli.sh`
@@ -23,7 +22,7 @@ sudo SSH_AUTH_SOCK=/tmp/ssh-7fwywErizl/agent.25571 dcos tunnel vpn
 7. Add vpn DNS servers (198.51.100.1 198.51.100.2 198.51.100.3) to /etc/systemd/resolved.conf as DNS and FallbackDNS
 8. Run tests and play around
 
-Test run might look something like:
+**Test run might look something like this:**
 ```
 ~/psmdb-dcos-test/tests$ ./durability-test.bats
  - create new service (skipped)

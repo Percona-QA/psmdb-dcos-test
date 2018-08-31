@@ -1,0 +1,5 @@
+{
+  user: "testUser",
+  pwd: "test123456",
+  roles: [ "readWrite", "dbAdmin", "root" ]
+}

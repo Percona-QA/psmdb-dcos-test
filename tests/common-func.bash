@@ -1,5 +1,6 @@
 #
-source ../CONFIG
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$DIR/../CONFIG"
 
 if [ "${DCOS_TEST_VER}" = "1.11" ]; then
   TEMPLATE="../templates/psmdb-dcos-11-config.json"
@@ -9,7 +10,7 @@ fi
 
 get_nr_nodes() {
   local FUN_DCOS_SERVICE_NAME="$1"
-  ${DCOS_CLI_BIN} ${FUN_DCOS_SERVICE_NAME} endpoints mongo-port|jq .dns|grep -c "${MONGODB_PORT}\""
+  ${DCOS_CLI_BIN} ${FUN_DCOS_SERVICE_NAME} endpoints mongo-port|jq -r .dns|grep -c "${MONGODB_PORT}"
 }
 
 get_node_address() {
@@ -27,18 +28,26 @@ get_node_address_full() {
 
 get_rs_address() {
   local FUN_DCOS_SERVICE_NAME="$1"
-  local FUN_NODE1_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "0")
-  local FUN_NODE2_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "1")
-  local FUN_NODE3_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "2")
-  echo "mongodb://${FUN_NODE1_ADDRESS},${FUN_NODE2_ADDRESS},${FUN_NODE3_ADDRESS}/?replicaSet=${RS_NAME}&authSource=admin"
+  local FUN_MONGO_RS_SIZE=$(($2-1))
+  local ADDRESS=""
+  
+  for node in `seq 0 $FUN_MONGO_RS_SIZE`; do
+    ADDRESS="${ADDRESS},$(get_node_address ${FUN_DCOS_SERVICE_NAME} "${node}")"
+  done
+  ADDRESS=${ADDRESS#","}
+  echo "mongodb://${ADDRESS}/?replicaSet=${RS_NAME}&authSource=admin"
 }
 
 get_rs_address_test() {
   local FUN_DCOS_SERVICE_NAME="$1"
-  local FUN_NODE1_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "0")
-  local FUN_NODE2_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "1")
-  local FUN_NODE3_ADDRESS=$(get_node_address ${FUN_DCOS_SERVICE_NAME} "2")
-  echo "mongodb://${MONGODB_TEST_USER}:${MONGODB_TEST_PASS}@${FUN_NODE1_ADDRESS},${FUN_NODE2_ADDRESS},${FUN_NODE3_ADDRESS}/${MONGODB_TEST_DB}?replicaSet=${RS_NAME}&authSource=admin"
+  local FUN_MONGO_RS_SIZE=$(($2-1))
+  local ADDRESS=""
+  
+  for node in `seq 0 $FUN_MONGO_RS_SIZE`; do
+    ADDRESS="${ADDRESS},$(get_node_address ${FUN_DCOS_SERVICE_NAME} "${node}")"
+  done
+  ADDRESS=${ADDRESS#","}
+  echo "mongodb://${MONGODB_TEST_USER}:${MONGODB_TEST_PASS}@${ADDRESS}/${MONGODB_TEST_DB}?replicaSet=${RS_NAME}&authSource=admin"
 }
 
 get_dcos_service_id() {
@@ -58,7 +67,8 @@ get_dcos_service_nr_tasks() {
 
 get_master_pod() {
   local FUN_DCOS_SERVICE_NAME="$1"
-  ${MONGO_BIN} "$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME})" --eval 'db.isMaster().primary' | tail -n1 | awk -F'-' '{print $1"-"$2"-"$3}'
+  local FUN_MONGO_RS_SIZE="$2"
+  ${MONGO_BIN} "$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME} ${FUN_MONGO_RS_SIZE})" --eval 'db.isMaster().primary' | tail -n1 | awk -F'-' '{print $1"-"$2"-"$3}'
 }
 
 get_pod_names() {
@@ -86,16 +96,17 @@ get_pod_agent() {
 
 load_data() {
   local FUN_DCOS_SERVICE_NAME="$1"
-  local FUN_TABLE_NAME="$2"
+  local FUN_MONGO_RS_SIZE="$2"
+  local FUN_TABLE_NAME="$3"
   local RECORD_COUNT="10000"
 
-  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME})' --eval \"db.${FUN_TABLE_NAME}.drop()\""
+  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME} ${FUN_MONGO_RS_SIZE})' --eval \"db.${FUN_TABLE_NAME}.drop()\""
   [ "$status" -eq 0 ]
 
-  run bash -c "${YCSB_BIN} load mongodb -s -P ${YCSB_BASE_DIR}/workloads/workloada -p recordcount=${RECORD_COUNT} -p table=\"${FUN_TABLE_NAME}\" -threads 64 -p mongodb.url=\"$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME})\" -p mongodb.auth=\"true\""
+  run bash -c "${YCSB_BIN} load mongodb -s -P ${YCSB_BASE_DIR}/workloads/workloada -p recordcount=${RECORD_COUNT} -p table=\"${FUN_TABLE_NAME}\" -threads 64 -p mongodb.url=\"$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME} ${FUN_MONGO_RS_SIZE})\" -p mongodb.auth=\"true\""
   [ "$status" -eq 0 ]
 
-  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME})' --eval \"db.${FUN_TABLE_NAME}.count()\" | tail -n1"
+  run bash -c "${MONGO_BIN} '$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME} ${FUN_MONGO_RS_SIZE})' --eval \"db.${FUN_TABLE_NAME}.count()\" | tail -n1"
   [ "$output" = "${RECORD_COUNT}" ]
 
   rm -f testdb-md5-${FUN_DCOS_SERVICE_NAME}.tmp
@@ -104,14 +115,30 @@ load_data() {
 
 load_check_hash() {
   local FUN_DCOS_SERVICE_NAME="$1"
+  local FUN_MONGO_RS_SIZE=$(($2-1))
   local TESTDB_MD5=$(cat testdb-md5-${FUN_DCOS_SERVICE_NAME}.tmp)
 
-  run bash -c "${MONGO_BIN} '$(get_node_address_full ${FUN_DCOS_SERVICE_NAME} 0)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1"
-  [ "$output" = "${TESTDB_MD5}" ]
+  for node in `seq 0 $FUN_MONGO_RS_SIZE`; do
+    run bash -c "${MONGO_BIN} '$(get_node_address_full ${FUN_DCOS_SERVICE_NAME} ${node})' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1"
+    [ "$output" = "${TESTDB_MD5}" ]
+  done
+}
 
-  run bash -c "${MONGO_BIN} '$(get_node_address_full ${FUN_DCOS_SERVICE_NAME} 1)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1"
-  [ "$output" = "${TESTDB_MD5}" ]
+check_rs_health() {
+  local FUN_DCOS_SERVICE_NAME="$1"
+  local FUN_MONGO_RS_SIZE=$(($2-1))
+  local NR_NODES=0
+  local NODE_STATE=0
+  
+  local RS_STATUS=$(${MONGO_BIN} "$(get_rs_address_test ${FUN_DCOS_SERVICE_NAME} ${FUN_MONGO_RS_SIZE})" --eval 'JSON.stringify(rs.status())' | sed -n '/{/,$p')
+  local NR_NODES=$(echo "${RS_STATUS}" | jq '.members | length')
+  [ "$NR_NODES" = "$((${FUN_MONGO_RS_SIZE}+1))" ]
 
-  run bash -c "${MONGO_BIN} '$(get_node_address_full ${FUN_DCOS_SERVICE_NAME} 2)' --username ${MONGODB_TEST_USER} --password ${MONGODB_TEST_PASS} --eval 'db.runCommand({ dbHash: 1 }).md5' | tail -n1"
-  [ "$output" = "${TESTDB_MD5}" ]
+  for node in `seq 0 $FUN_MONGO_RS_SIZE`; do
+    NODE_STATE=$(echo "${RS_STATUS}" | jq ".members[${node}].health")
+    [ "$NODE_STATE" = "1" ]
+
+    NODE_STATE=$(echo "${RS_STATUS}" | jq ".members[${node}].state")
+    [ "$NODE_STATE" = "1" -o "$NODE_STATE" = "2" ]
+  done
 }

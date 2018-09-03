@@ -2,7 +2,7 @@
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$DIR/../CONFIG"
 
-if [ "${DCOS_TEST_VER}" = "1.11" ]; then
+if [ "${DCOS_TEST_VER%-*}" = "1.11" ]; then
   TEMPLATE="../templates/psmdb-dcos-11-config.json"
 else
   TEMPLATE="../templates/psmdb-dcos-10-config.json"

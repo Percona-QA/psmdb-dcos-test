@@ -126,11 +126,19 @@ load common-func
 }
 
 @test "check issuing kill -9 on master" {
-  skip "Not implemented yet."
-  # sudo dcos task exec --interactive --tty mongo-rs-1-mongod__ac3d4e16-2e33-4c9d-b559-3cfdd4142de3 /bin/bash
-  #TODO: Kill -9 mongod process on master pod
-  #TODO: Check that the node was recreated
-  #TODO: Check that the data loaded in previous test is the same in all nodes
+  local MASTER_POD=$(get_master_pod ${SERVICE_NAME} ${RS_SIZE})
+  local MASTER_POD_AGENT=$(get_pod_agent ${SERVICE_NAME} ${MASTER_POD})
+  local MASTER_POD_TASK=$(get_task_id ${SERVICE_NAME} ${MASTER_POD})
+
+  run ${DCOS_CLI_BIN} task exec ${MASTER_POD_TASK} bash -c "kill -9 \$(pidof mongod)"
+  [ "$status" -eq 0 ]
+  sleep 180
+
+  local MASTER_POD_TASK_NEW=$(get_task_id ${SERVICE_NAME} ${MASTER_POD})
+  [ "${MASTER_POD_TASK}" != "${MASTER_POD_TASK_NEW}" ]
+
+  load_check_hash ${SERVICE_NAME} ${RS_SIZE}
+  check_rs_health ${SERVICE_NAME} ${RS_SIZE}
 }
 
 @test "load data in usertable6" {
@@ -140,11 +148,19 @@ load common-func
 }
 
 @test "check issuing kill -9 on slave" {
-  skip "Not implemented yet."
-  # sudo dcos task exec --interactive --tty mongo-rs-1-mongod__ac3d4e16-2e33-4c9d-b559-3cfdd4142de3 /bin/bash
-  #TODO: Kill -9 mongod process on slave pod
-  #TODO: Check that the node was recreated
-  #TODO: Check that the data loaded in previous test is the same in all nodes
+  local SLAVE_POD=$(get_master_pod ${SERVICE_NAME} ${RS_SIZE})
+  local SLAVE_POD_AGENT=$(get_pod_agent ${SERVICE_NAME} ${SLAVE_POD})
+  local SLAVE_POD_TASK=$(get_task_id ${SERVICE_NAME} ${SLAVE_POD})
+
+  run ${DCOS_CLI_BIN} task exec ${SLAVE_POD_TASK} bash -c "kill -9 \$(pidof mongod)"
+  [ "$status" -eq 0 ]
+  sleep 180
+
+  local SLAVE_POD_TASK_NEW=$(get_task_id ${SERVICE_NAME} ${SLAVE_POD})
+  [ "${SLAVE_POD_TASK}" != "${SLAVE_POD_TASK_NEW}" ]
+
+  load_check_hash ${SERVICE_NAME} ${RS_SIZE}
+  check_rs_health ${SERVICE_NAME} ${RS_SIZE}
 }
 
 @test "load data in usertable7" {

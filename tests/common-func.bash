@@ -94,6 +94,12 @@ get_pod_agent() {
   ${DCOS_CLI_BIN} ${FUN_DCOS_SERVICE_NAME} pod info ${FUN_DCOS_POD_NAME} | jq -r ".[] | select(.info.name == \"${FUN_DCOS_POD_NAME}-mongod\") | .info.slaveId.value"
 }
 
+get_task_id() {
+  local FUN_DCOS_SERVICE_NAME="$1"
+  local FUN_DCOS_POD_NAME="$2"
+  ${DCOS_CLI_BIN} ${FUN_DCOS_SERVICE_NAME} pod info ${FUN_DCOS_POD_NAME} | jq -r ".[] | select(.info.name == \"${FUN_DCOS_POD_NAME}-mongod\") | .info.taskId.value"
+}
+
 load_data() {
   local FUN_DCOS_SERVICE_NAME="$1"
   local FUN_MONGO_RS_SIZE="$2"

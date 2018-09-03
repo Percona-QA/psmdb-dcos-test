@@ -183,12 +183,12 @@ load common-func
 }
 
 @test "check scaling up to 5 instances" {
-  skip "Issue: https://github.com/mesosphere/dcos-mongo/issues/258"
+  #skip "Issue: https://github.com/mesosphere/dcos-mongo/issues/258"
   run ${DCOS_CLI_BIN} percona-mongo scale 5
   [ "$status" -eq 0 ]
   
-  sleep 60
-  load_check_hash ${SERVICE_NAME} ${RS_SIZE}
+  sleep 120
+  load_check_hash ${SERVICE_NAME} 5
   check_rs_health ${SERVICE_NAME} 5
 }
 
@@ -199,12 +199,12 @@ load common-func
 }
 
 @test "check scaling down to 3 instances" {
-  skip "Issue: https://github.com/mesosphere/dcos-mongo/issues/258"
+  #skip "Issue: https://github.com/mesosphere/dcos-mongo/issues/258"
   run ${DCOS_CLI_BIN} percona-mongo scale 3
   [ "$status" -eq 0 ]
   
-  sleep 60
-  load_check_hash ${SERVICE_NAME} ${RS_SIZE}
+  sleep 120
+  load_check_hash ${SERVICE_NAME} 3
   check_rs_health ${SERVICE_NAME} 3
 }
 

@@ -57,12 +57,20 @@ get_dcos_service_id() {
 
 get_dcos_service_active_status() {
   local FUN_DCOS_SERVICE_NAME="$1"
-  echo $(${DCOS_CLI_BIN} service|grep "${FUN_DCOS_SERVICE_NAME}"|awk -F' ' '{print $2}')
+  if [ "${DCOS_TEST_VER%-*}" = "1.10" ]; then
+    echo $(${DCOS_CLI_BIN} service|grep "${FUN_DCOS_SERVICE_NAME}"|awk -F' ' '{print $3}')
+  else
+    echo $(${DCOS_CLI_BIN} service|grep "${FUN_DCOS_SERVICE_NAME}"|awk -F' ' '{print $2}')
+  fi
 }
 
 get_dcos_service_nr_tasks() {
   local FUN_DCOS_SERVICE_NAME="$1"
-  echo $(${DCOS_CLI_BIN} service|grep "${FUN_DCOS_SERVICE_NAME}"|awk -F' ' '{print $3}')
+  if [ "${DCOS_TEST_VER%-*}" = "1.10" ]; then
+    echo $(${DCOS_CLI_BIN} service|grep "${FUN_DCOS_SERVICE_NAME}"|awk -F' ' '{print $4}')
+  else
+    echo $(${DCOS_CLI_BIN} service|grep "${FUN_DCOS_SERVICE_NAME}"|awk -F' ' '{print $3}')
+  fi
 }
 
 get_master_pod() {

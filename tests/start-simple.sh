@@ -9,7 +9,7 @@ else
 fi
 ${DCOS_CLI_BIN} package install percona-mongo --options=${TEMPLATE} --yes
 
-sleep 30
+sleep 60
 ${DCOS_CLI_BIN} percona-mongo endpoints mongo-port
 
 ${DCOS_CLI_BIN} percona-mongo pod list

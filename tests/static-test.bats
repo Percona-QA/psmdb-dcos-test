@@ -24,9 +24,17 @@ load common-func
 }
 
 @test "destroy service" {
-  skip "Disabled because of https://github.com/mesosphere/dcos-mongo/issues/249"
+  #skip "Disabled because of https://github.com/mesosphere/dcos-mongo/issues/249"
   run ${DCOS_CLI_BIN} package uninstall percona-mongo --yes
   [ "$status" -eq 0 ]
 
-  #TODO: Add check that all parts are actually destroyed
+  sleep 60
+  run bash -c "${DCOS_CLI_BIN} service | grep -c ${SERVICE_NAME}"
+  [ "$output" = "0" ]
+
+  run bash -c "${DCOS_CLI_BIN} marathon task list|grep -c ${SERVICE_NAME}"
+  [ "$output" = "0" ]
+
+  run bash -c "${DCOS_CLI_BIN} marathon app list|grep -c ${SERVICE_NAME}"
+  [ "$output" = "0" ]
 }

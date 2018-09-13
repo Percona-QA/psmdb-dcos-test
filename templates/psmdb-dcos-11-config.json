@@ -1,16 +1,18 @@
 {
   "service": {
-    "name": "percona-mongo",
+    "name": "percona-server-mongodb",
     "sleep": 1000,
     "user": "root",
     "principal": "",
-    "virtual_networks": false,
     "secret_name": "",
+    "virtual_network_enabled": false,
+    "virtual_network_name": "dcos",
+    "virtual_network_plugin_labels": "",
     "log_level": "INFO",
     "mesos_api_version": "V1"
   },
   "mongodb": {
-    "cpus": 2,
+    "cpus": 1,
     "mem": 1024,
     "disk": 1000,
     "diskType": "ROOT",
@@ -31,7 +33,7 @@
     "clusterAdminPassword": "test123456",
     "clusterMonitorUser": "clustermonitor",
     "clusterMonitorPassword": "test123456",
-    "key": "8zfow+lkkfCWu6Rh7XVDIA0m9CO3uq/pqbUvBeYvtO9MXwdWu2LSFVjnTuUiYxHY XMAphLnW66ESQWA5sI8zHhLC4eKss3KhZtWGLyfYQ1/XSW+Jwo+m2TlPmlKV0Ikc OeZUMeR0KSUkDovJIv/48pye/suzG51xo+uFvj1rHa02Vs74xfVQXP+iNSA6G58S RkleDHUQGW+phntlO1n4zL/Km/zgS/kFGOAX1LlSG3bmzWMaJqxv7xm6cGI7QMCf LOQsTTiol0C4u37G727gFEBF7Javc0wqwjdxG61838FNM+iXJ9Yqtj6vVT3Omk/N N/MostPHeL/TRp5RG7wGz1dDW4X1u3nTDFxGjSBgRg16VlTaeQQ8S7kX8U25W+Nd +zvuLh6zo/ESzdNyNhGwJuSxILg3dOUR2JDmZxcxR1t7ePmr8fv4yEHSUk0vtPlu Qg0JD1teT+k5m5OPqEe7brWyVpe9M+GC1iGTFATcT+yYqi/XmNeEHNjEsIqbe3O7 7MYAPxoV+n/gh9VheJlv/iMKGHdTYdFOyrn+NdegCDKma0DtSARkTsDXazOfAgIa EfGKoC+jNGgREYmrlbCHQU2F1X2AZfpJjFVaAbTaBt3iCeYF2IqLww3V28Cv/Yq+ hXBH2MWMsk/3XS96Z87KzV0as8/I8plcXCU/jNpzmXkLuvbk3CRfvvz+Xv1ZXEHB TWjXWqDzebGvFTQb9VQLZ89yrVwyyi/9VFucH6obcvJDmru3C1nc/v8uBK4OPrGy Lnxu50IP+1Sxdn3YVgPlESr9eJFCkCljXpHem8reLzEbpdE6MLdXYTzCtwxtXkrG p44alfSQSgMZP09VivyXviFNV96BdIDjTEhiz2QXypaHwT1hCU871KR7fLsmBjYm uIuFzK9ywDhzauygrjUoANh4NwOR2fVhGsOCs3asDDdWotzl/OlEuzG+qbG6yr2Z IuAGvkV9x8L06K2bdHUNYtyFclg8Asl/X/4eazHTBY0J/sX2"
+    "key": "LBX5LFj97uVvOm96+TGFzRKZoLnOFrG6/zoubqddb5TSId1Ef1Ozvs/8ltOdYvn0 tmv5GkM/vhWClzgbuqL6BcSr981XyT8wn/mbhmnvVE7ZoItNrowE3Vp5Z1KksZiF w/KUZq9pmLe10yf2Mbh+T4K5kkJRbYxSnGBWxrroLNkS+qjj+Gll19B8RPf8aRyF o5YWEsAXzvGN5KGKba/YRaTdoreEkJVCXS0elcMNvuddrVsFZAE9PYBJ3hxgQLYX JLgzItCJoaVLCqmCF65WUTRq1dn+Wkf2U4rs+PpxGH95kcwJrb49zdlFyrYcwqf5 92GBqGvlshgbyDiCESeWNrQne4UY3BURW6COSMpj4EBaYHmcbQxUAptb+5UoSrxh FTDHyfF+kMhizZLD/1cx6JoK2vt35TBqK41zQNF6z8SitefizVWrLPPLNnl8B9xE 7gaO4UnTOIK3d1yzgg6+qBvB9nEarzekD9l8na3casjBSfwTSMzlve73vFKi9krm t+5YkjlXGXqGI4l4z2g/8yphmbCO5WKhNnu1FwsncUBa1DVL1kJYAImiY0ubIdFk djRBoRh6moblsQupc+uLz3frKPd0k4SIA8H9lD0P0SDY0VONIkwTfL4OLQtQMVSF yCTGLhUgslyfHOsFmKRiX+hcLeeMS+xj8fBHFdjOZT+P8JOifL3bkb/O+v9MU3fv oGNYPmsmH195gsWIKYKqwfvlCUk0J7zok1eGhUZli1k2U8XKSWMgMvjCcshO70b4 hkT4ktzLNh+uNuo7mm0y9Ihi7uRsIQr6fxqYgfCX3AOlLPbEqNltnWaOYsCeMRSL MYpDAIQUccnGkyLdU3vBxcnLGX0krzVAQd/aEm+wj6+mMuAN09+CckeH3j4VB0Gn mzfW/g28itf5m8BFT31kGklqFEOCBVmnVVKrPJj+/a2Yj6j/TdNOLZJF21r2wbo4 XkxkVhswLfQFsWPj3shbfuiiKuAXeSF2m1gPrL5W18gXOauh"
   },
   "mongodb-advanced": {
     "container": {
@@ -57,6 +59,7 @@
         "smallFiles": false
       },
       "wiredTiger": {
+        "engineConfigCacheSizeRatio": 0.5,
         "engineConfigJournalCompressor": "snappy",
         "engineConfigDirectoryForIndexes": false,
         "collectionConfigBlockCompressor": "snappy",

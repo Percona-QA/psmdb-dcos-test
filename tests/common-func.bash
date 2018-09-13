@@ -2,11 +2,12 @@
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$DIR/../CONFIG"
 
-if [ "${DCOS_TEST_VER%-*}" = "1.11" ]; then
-  TEMPLATE="../templates/psmdb-dcos-11-config.json"
-else
-  TEMPLATE="../templates/psmdb-dcos-10-config.json"
-fi
+#if [ "${DCOS_TEST_VER%-*}" = "1.11" ]; then
+#  TEMPLATE="../templates/psmdb-dcos-11-config.json"
+#else
+#  TEMPLATE="../templates/psmdb-dcos-10-config.json"
+#fi
+TEMPLATE="../templates/mongodb-credentials.json"
 
 get_nr_nodes() {
   local FUN_DCOS_SERVICE_NAME="$1"

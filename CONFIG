@@ -1,9 +1,9 @@
-CLUSTER_URL=https://tomislav-elasticl-1qyflp6bf7sv4-773058626.eu-west-1.elb.amazonaws.com
+CLUSTER_URL=https://tomislav-elasticl-l9tsdpm85hxj-457420520.eu-west-1.elb.amazonaws.com
 CLUSTER_NAME=tomislav-dcos-11-ee
 DCOS_TEST_VER=1.11-ee
 DCOS_11_VER=1.11.4
 DCOS_10_VER=1.10.8
-DCOS_PSMDB=0.3.1-3.6.5
+DCOS_PSMDB=0.4.0-3.6.6
 MONGO_BASE_DIR=/home/tomislav.plavcic/percona-server-mongodb-3.6.6-1.4
 YCSB_BASE_DIR=/home/tomislav.plavcic/ycsb-mongodb-binding-0.15.0
 
@@ -13,8 +13,8 @@ YCSB_BIN=${YCSB_BASE_DIR}/bin/ycsb
 DCOS_CLI_BIN="sudo dcos"
 RS_NAME="rs"
 RS_SIZE=3
-PACKAGE_NAME="percona-mongo"
-SERVICE_NAME="percona-mongo"
+PACKAGE_NAME="percona-server-mongodb"
+SERVICE_NAME="percona-server-mongodb"
 MONGODB_TEST_USER="testUser"
 MONGODB_TEST_PASS="test123456"
 MONGODB_TEST_DB="test"

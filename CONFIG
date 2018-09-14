@@ -1,4 +1,4 @@
-CLUSTER_URL=https://tomislav-elasticl-l9tsdpm85hxj-457420520.eu-west-1.elb.amazonaws.com
+CLUSTER_URL=https://tomislav-elasticl-1q0lry7w86b19-14212803.eu-west-1.elb.amazonaws.com
 CLUSTER_NAME=tomislav-dcos-11-ee
 DCOS_TEST_VER=1.11-ee
 DCOS_11_VER=1.11.4

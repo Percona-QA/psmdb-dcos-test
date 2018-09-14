@@ -9,6 +9,23 @@ source "$DIR/../CONFIG"
 #fi
 TEMPLATE="../templates/mongodb-credentials.json"
 
+check_binaries() {
+  if [ ! -x "${MONGO_BIN}" ]; then
+    echo "MongoDB client shell binary is not found in: ${MONGO_BIN}"
+    exit 1
+  fi
+
+  if [ ! -x "${YCSB_BIN}" ]; then
+    echo "YCSB binary is not found in: ${YCSB_BIN}"
+    exit 1
+  fi
+
+  if [ ! -e `which dcos 2> /dev/null` ]; then
+    echo "DCOS command line binary is not found in path!"
+    exit 1
+  fi
+}
+
 get_nr_nodes() {
   local FUN_DCOS_SERVICE_NAME="$1"
   ${DCOS_CLI_BIN} ${FUN_DCOS_SERVICE_NAME} endpoints mongo-port|jq -r .dns|grep -c "${MONGODB_PORT}"

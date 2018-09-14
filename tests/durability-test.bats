@@ -3,6 +3,12 @@
 # if data will persist and replica set remain operational
 load common-func
 
+
+@test "check binaries" {
+  run check_binaries
+  [ "$status" -eq 0 ]
+}
+
 @test "create new service" {
   run ${DCOS_CLI_BIN} package install ${PACKAGE_NAME} --options=${TEMPLATE} --yes
   [ "$status" -eq 0 ]
@@ -184,7 +190,7 @@ load common-func
 
 @test "check scaling up to 5 instances" {
   #skip "Issue: https://github.com/mesosphere/dcos-mongo/issues/258"
-  run ${DCOS_CLI_BIN} percona-mongo scale 5
+  run ${DCOS_CLI_BIN} ${SERVICE_NAME} scale up 5
   [ "$status" -eq 0 ]
   
   sleep 120
@@ -200,7 +206,7 @@ load common-func
 
 @test "check scaling down to 3 instances" {
   #skip "Issue: https://github.com/mesosphere/dcos-mongo/issues/258"
-  run ${DCOS_CLI_BIN} percona-mongo scale 3
+  run ${DCOS_CLI_BIN} ${SERVICE_NAME} scale down 3
   [ "$status" -eq 0 ]
   
   sleep 120
@@ -210,7 +216,7 @@ load common-func
 
 @test "destroy service" {
   #skip "Disabled because of https://github.com/mesosphere/dcos-mongo/issues/249"
-  run ${DCOS_CLI_BIN} package uninstall percona-mongo --yes
+  run ${DCOS_CLI_BIN} package uninstall ${PACKAGE_NAME} --yes
   [ "$status" -eq 0 ]
 
   sleep 60
